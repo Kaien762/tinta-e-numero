@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#eee4d4" />
+    <meta name="description" content="Jogo 3D de leitura e atenção: leia o número, siga a cor das letras e leve a peça certa para a casa certa." />
     <title>Tinta &amp; Número</title>
     <link
       rel="icon"
@@ -14,27 +15,43 @@
     <canvas id="scene" aria-label="Mesa com o tabuleiro de 16 casas e as quatro peças"></canvas>
     <div class="vignette" aria-hidden="true"></div>
 
+    <!-- ===================================================== HUD -->
     <header class="hud is-off" id="hud">
       <div class="hud-group">
+        <button class="icon-btn" id="btn-home" type="button" aria-label="Voltar ao menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" /></svg>
+        </button>
         <span class="chip chip-mode" id="hud-mode">Treino</span>
-        <span class="chip" id="hud-round">Rodada 1/10</span>
+        <span class="chip chip-round" id="hud-round">Rodada 1/10</span>
       </div>
       <span class="chip chip-timer" id="hud-timer" hidden>00:00,0</span>
-      <div class="hud-group">
+      <div class="hud-group hud-right">
+        <span class="chip chip-lives" id="hud-lives" hidden aria-label="Vidas"></span>
+        <span class="chip chip-combo" id="hud-combo" hidden>x1</span>
+        <span class="chip chip-score" id="hud-score" hidden>0</span>
         <span class="chip chip-errors" id="hud-errors">Erros: 0</span>
-        <button class="icon-btn" id="btn-sound" type="button" aria-label="Desligar som" aria-pressed="true">
-          <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9h4l5-4v14l-5-4H4z" />
-            <path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
-          </svg>
-          <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9h4l5-4v14l-5-4H4z" />
-            <path class="wave" d="M16 9l6 6M22 9l-6 6" />
-          </svg>
-        </button>
       </div>
     </header>
 
+    <button class="icon-btn sound-fab" id="btn-sound" type="button" aria-label="Volume" aria-expanded="false" aria-controls="sound-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 9h4l5-4v14l-5-4H4z" />
+        <path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+      </svg>
+    </button>
+    <div class="sound-panel" id="sound-panel" hidden>
+      <p class="sound-title">Som</p>
+      <label class="slider">
+        <span class="slider-label"><span>🎵 Música</span><output id="vol-music-out">50%</output></span>
+        <input type="range" id="vol-music" min="0" max="100" step="5" value="50" />
+      </label>
+      <label class="slider">
+        <span class="slider-label"><span>🔔 Efeitos</span><output id="vol-sfx-out">80%</output></span>
+        <input type="range" id="vol-sfx" min="0" max="100" step="5" value="80" />
+      </label>
+    </div>
+
+    <!-- ===================================================== painel -->
     <section class="panel is-off" id="panel" aria-label="Painel do estímulo">
       <div class="plate" id="plate">
         <svg class="word" id="word" viewBox="0 0 640 176" role="img" aria-label="">
@@ -42,14 +59,18 @@
           <text class="w w-line" x="320" y="136"></text>
           <text class="w w-fill" x="320" y="136"></text>
         </svg>
+        <div class="roundbar" id="roundbar" hidden><i></i></div>
       </div>
+      <div class="dots" id="dots" aria-hidden="true"></div>
       <div class="coach" id="coach" aria-live="polite"></div>
       <div class="toast" id="toast" role="status"></div>
     </section>
 
     <div class="countdown" id="countdown" aria-live="assertive"></div>
+    <div class="floaters" id="floaters" aria-hidden="true"></div>
 
-    <div class="screen" id="screen-start">
+    <!-- ===================================================== primeira visita -->
+    <div class="screen" id="screen-start" hidden>
       <div class="card">
         <svg class="logo" viewBox="0 0 600 236" role="img" aria-label="Tinta &amp; Número">
           <g class="logo-halo">
@@ -77,9 +98,45 @@
       </div>
     </div>
 
+    <!-- ===================================================== menu -->
+    <div class="screen" id="screen-menu" hidden>
+      <div class="card card-menu">
+        <svg class="logo logo-small" id="menu-logo" viewBox="0 0 600 236" role="img" aria-label="Tinta &amp; Número"></svg>
+        <p class="eyebrow" id="menu-eyebrow" hidden>Tutorial concluído ✓</p>
+        <div class="menu-list">
+          <button class="menu-card" id="btn-jornada" type="button" style="--accent: #2fa860">
+            <span class="menu-ico" aria-hidden="true">🗺️</span>
+            <span class="menu-text">
+              <span class="menu-title">Jornada</span>
+              <span class="menu-desc">10 fases, cada vez mais difíceis</span>
+            </span>
+            <span class="menu-meta" id="menu-jornada">★ 0/30</span>
+          </button>
+          <button class="menu-card" id="btn-relampago" type="button" style="--accent: #f5c400">
+            <span class="menu-ico" aria-hidden="true">⚡</span>
+            <span class="menu-text">
+              <span class="menu-title">Relâmpago</span>
+              <span class="menu-desc">60 segundos, pontos e combo</span>
+            </span>
+            <span class="menu-meta" id="menu-relampago">Recorde 0</span>
+          </button>
+          <button class="menu-card" id="btn-classico" type="button" style="--accent: #3b82f6">
+            <span class="menu-ico" aria-hidden="true">🎯</span>
+            <span class="menu-text">
+              <span class="menu-title">Clássico</span>
+              <span class="menu-desc">10 rodadas: treino ou desafio</span>
+            </span>
+            <span class="menu-meta" id="menu-classico">—</span>
+          </button>
+        </div>
+        <button class="link-btn" id="btn-rever" type="button">Como jogar (tutorial)</button>
+      </div>
+    </div>
+
+    <!-- ===================================================== clássico -->
     <div class="screen" id="screen-mode" hidden>
       <div class="card">
-        <p class="eyebrow" id="mode-eyebrow" hidden>Tutorial concluído ✓</p>
+        <p class="eyebrow">Clássico</p>
         <h2>Escolha o modo</h2>
         <div class="modes">
           <button class="mode-card" id="btn-treino" type="button">
@@ -102,10 +159,76 @@
             <span class="mode-desc">10 rodadas com cronômetro</span>
           </button>
         </div>
-        <button class="link-btn" id="btn-rever" type="button">Rever o tutorial</button>
+        <button class="link-btn" id="btn-mode-back" type="button">← Voltar ao menu</button>
       </div>
     </div>
 
+    <!-- ===================================================== jornada: mapa -->
+    <div class="screen" id="screen-phases" hidden>
+      <div class="card">
+        <p class="eyebrow">Jornada</p>
+        <h2>Escolha a fase</h2>
+        <p class="stars-total" id="phases-stars">★ 0/30</p>
+        <div class="phase-grid" id="phase-grid"></div>
+        <button class="link-btn" id="btn-phases-back" type="button">← Voltar ao menu</button>
+      </div>
+    </div>
+
+    <!-- ===================================================== jornada: abertura da fase -->
+    <div class="screen" id="screen-phase-intro" hidden>
+      <div class="card">
+        <p class="eyebrow" id="pi-num">Fase 1</p>
+        <h2 id="pi-name">Primeiros passos</h2>
+        <p class="twist" id="pi-twist"></p>
+        <div class="rule-chips" id="pi-rules"></div>
+        <ul class="goals" id="pi-goals"></ul>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-pi-play" type="button">Jogar</button>
+          <button class="btn btn-ghost" id="btn-pi-back" type="button">Fases</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================== jornada: resultado -->
+    <div class="screen" id="screen-phase-end" hidden>
+      <div class="card">
+        <p class="eyebrow" id="pe-num">Fase 1</p>
+        <h2 id="pe-title">Fase concluída!</h2>
+        <div class="big-stars" id="pe-stars"></div>
+        <div class="stats">
+          <div class="stat"><span class="stat-label">Tempo</span><span class="stat-value" id="pe-time">00:00,0</span></div>
+          <div class="stat"><span class="stat-label">Tentativas incorretas</span><span class="stat-value" id="pe-errors">0</span></div>
+        </div>
+        <p class="end-msg" id="pe-msg"></p>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-pe-next" type="button">Próxima fase</button>
+          <button class="btn btn-ghost" id="btn-pe-retry" type="button">Jogar de novo</button>
+          <button class="link-btn" id="btn-pe-map" type="button">Ver as fases</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================== relâmpago: resultado -->
+    <div class="screen" id="screen-flash-end" hidden>
+      <div class="card">
+        <p class="eyebrow">Relâmpago</p>
+        <h2>Tempo esgotado!</h2>
+        <p class="score-big" id="fe-score">0</p>
+        <p class="record-badge" id="fe-record" hidden>🏆 Novo recorde!</p>
+        <p class="best-line" id="fe-best">Recorde: 0</p>
+        <div class="stats">
+          <div class="stat"><span class="stat-label">Acertos</span><span class="stat-value" id="fe-correct">0</span></div>
+          <div class="stat"><span class="stat-label">Maior combo</span><span class="stat-value" id="fe-combo">0</span></div>
+          <div class="stat"><span class="stat-label">Tentativas incorretas</span><span class="stat-value" id="fe-errors">0</span></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-fe-again" type="button">Jogar de novo</button>
+          <button class="btn btn-ghost" id="btn-fe-menu" type="button">Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================== clássico: resultado -->
     <div class="screen" id="screen-end" hidden>
       <div class="card">
         <p class="eyebrow" id="end-mode">Treino</p>
@@ -115,13 +238,16 @@
           <div class="stat"><span class="stat-label">Tentativas incorretas</span><span class="stat-value" id="end-errors">0</span></div>
           <div class="stat"><span class="stat-label">Rodadas</span><span class="stat-value" id="end-rounds">10/10</span></div>
         </div>
+        <p class="best-line" id="end-best" hidden></p>
         <p class="end-msg" id="end-msg"></p>
         <div class="actions">
           <button class="btn btn-primary" id="btn-replay" type="button">Jogar novamente</button>
           <button class="btn btn-ghost" id="btn-change" type="button">Trocar modo</button>
+          <button class="link-btn" id="btn-end-menu" type="button">Menu</button>
         </div>
       </div>
     </div>
+
 
     <div class="fatal" id="fatal" hidden></div>
     <script type="module" src="/src/main.ts"></script>

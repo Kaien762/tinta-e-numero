@@ -73,6 +73,8 @@ export class PieceView {
   readonly group = new Group();
   readonly hit: Mesh;
   readonly ghost = new Group();
+  /** Malhas visíveis da peça (para o toque preciso). */
+  readonly visuals: Mesh[];
   readonly blob: Mesh;
   readonly halo: Mesh;
   /** Onde a base da peça está apoiada (animado). */
@@ -104,7 +106,9 @@ export class PieceView {
     for (const m of [body, foot, head]) {
       m.castShadow = true;
       m.receiveShadow = true;
+      m.userData.color = color;
     }
+    this.visuals = [body, foot, head];
     this.group.add(foot, body, headPivot);
 
     // área de toque maior que a peça (dedo no celular)

@@ -32,7 +32,7 @@ export class Fx {
     this.mats = {} as Record<ColorId, MeshStandardMaterial>;
     for (const c of COLORS) this.mats[c] = new MeshStandardMaterial({ color: PALETTE[c].hex, roughness: 0.35 });
     const geo = new BoxGeometry(0.12, 0.025, 0.08);
-    for (let i = 0; i < 28; i++) {
+    for (let i = 0; i < 140; i++) {
       const m = new Mesh(geo, this.cream);
       m.visible = false;
       this.pool.push(m);
@@ -67,8 +67,8 @@ export class Fx {
     this.group.add(this.arrow);
   }
 
-  burst(color: ColorId, at: Vector3): void {
-    for (let i = 0; i < 14; i++) {
+  burst(color: ColorId, at: Vector3, count = 14, power = 1): void {
+    for (let i = 0; i < count; i++) {
       const mesh = this.pool.find((m) => !m.visible);
       if (!mesh) return;
       mesh.material = i % 3 === 0 ? this.cream : this.mats[color];
@@ -76,13 +76,13 @@ export class Fx {
       mesh.position.set(at.x, at.y + 0.45, at.z);
       mesh.scale.setScalar(1);
       const a = Math.random() * Math.PI * 2;
-      const r = 0.9 + Math.random() * 1.3;
+      const r = (0.9 + Math.random() * 1.3) * power;
       this.live.push({
         mesh,
-        vel: new Vector3(Math.cos(a) * r, 2.4 + Math.random() * 1.6, Math.sin(a) * r),
+        vel: new Vector3(Math.cos(a) * r, (2.4 + Math.random() * 1.6) * power, Math.sin(a) * r),
         spin: new Vector3(Math.random() * 14 - 7, Math.random() * 14 - 7, Math.random() * 14 - 7),
         life: 0,
-        max: 0.55 + Math.random() * 0.25,
+        max: (0.55 + Math.random() * 0.25) * (power > 1 ? 1.6 : 1),
       });
     }
   }

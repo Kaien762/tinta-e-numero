@@ -11,7 +11,7 @@ import {
 import type { Sfx } from '../audio';
 import { Input } from '../input';
 import { PALETTE } from '../game/palette';
-import { COLORS, HOME, atCell, isAt, type Cell, type ColorId } from '../game/rules';
+import { COLORS, HOME, VALUES, atCell, isAt, type Cell, type ColorId } from '../game/rules';
 import type { AttemptResult } from '../game/session';
 import { BoardView, FRAME_MAX, FRAME_MIN, TABLE_Y, TILE_TOP, footFor, footForCell } from './board';
 import { Fx } from './fx';
@@ -48,6 +48,7 @@ export class World {
   private readonly raycaster = new Raycaster();
   private readonly plane = new Plane(new Vector3(0, 1, 0), 0);
   private readonly hitPieces: Mesh[];
+  private readonly visualPieces: Mesh[];
   private hintPiece: ColorId | null = null;
   private last = 0;
   private readonly tmp = new Vector3();
@@ -80,6 +81,7 @@ export class World {
       this.stage.scene.add(p.group, p.ghost, p.blob, p.halo);
     }
     this.hitPieces = COLORS.map((c) => this.pieces[c].hit);
+    this.visualPieces = COLORS.flatMap((c) => this.pieces[c].visuals);
     this.stage.bounds.set(FRAME_MIN, FRAME_MAX);
     this.input = new Input(canvas, this);
   }
@@ -95,9 +97,25 @@ export class World {
     return this.raycaster;
   }
 
+  /**
+   * Peça sob o ponteiro. Acertar o desenho da peça sempre vale. A área de toque ampliada
+   * (cilindro invisível) só vale fora das casas ou na casa da própria peça: assim ela não
+   * "rouba" o toque numa casa que fica logo atrás de outra peça.
+   */
   pickPiece(ndc: Vector2): ColorId | null {
-    const hit = this.ray(ndc).intersectObjects(this.hitPieces, false)[0];
-    return hit ? (hit.object.userData.color as ColorId) : null;
+    const ray = this.ray(ndc);
+    const exact = ray.intersectObjects(this.visualPieces, false)[0];
+    if (exact) return exact.object.userData.color as ColorId;
+    const loose = ray.intersectObjects(this.hitPieces, false)[0];
+    if (!loose) return null;
+    const color = loose.object.userData.color as ColorId;
+    const cell = this.pickCell(ndc);
+    return !cell || isAt(this.pieces[color].rest, cell) ? color : null;
+  }
+
+  /** Peça que está parada numa casa (pela posição lógica). */
+  occupant(cell: Cell): ColorId | null {
+    return COLORS.find((c) => isAt(this.pieces[c].rest, cell)) ?? null;
   }
 
   pickCell(ndc: Vector2): Cell | null {
@@ -198,6 +216,21 @@ export class World {
       }
       this.tweens.add({ key: p, delay: i * 45, duration: 1, done: () => this.hop(p, home, 260) });
     });
+  }
+
+  /** Chuva de confete de cerâmica sobre o tabuleiro (vitória, recorde). */
+  celebrate(): void {
+    for (let k = 0; k < 10; k++) {
+      const color = COLORS[k % COLORS.length];
+      this.tweens.add({
+        duration: 1,
+        delay: k * 90,
+        done: () => {
+          const cell: Cell = { col: COLORS[Math.floor(Math.random() * 4)], row: VALUES[Math.floor(Math.random() * 4)] };
+          this.fx.burst(color, footForCell(cell, new Vector3()), 12, 1.35);
+        },
+      });
+    }
   }
 
   /** Seta sobre uma peça e/ou contorno numa casa (tutorial). */

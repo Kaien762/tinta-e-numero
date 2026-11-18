@@ -95,7 +95,7 @@ describe('partida', () => {
     expect(s.round).toBe(1);
 
     const ok = s.attempt('verde', { col: 'verde', row: 2 });
-    expect(ok).toEqual({ kind: 'correct', finished: false, completedRound: 1 });
+    expect(ok).toMatchObject({ kind: 'correct', finished: false, completedRound: 1, streak: 1 });
     expect(s.positions.verde).toEqual(atCell({ col: 'verde', row: 2 }));
     expect(s.round).toBe(2);
   });

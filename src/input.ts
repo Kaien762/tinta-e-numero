@@ -61,14 +61,17 @@ export class Input {
     this.startX = e.clientX;
     this.startY = e.clientY;
 
-    const piece = this.world.pickPiece(ndc);
+    const cell = this.world.pickCell(ndc);
+    // Com uma peça na mão, uma casa vazia ganha do toque, mesmo que a cabeça
+    // de outra peça (na frente, pela inclinação da câmera) cubra parte dela.
+    const wantsCell = !!this.world.selected && !!cell && this.world.occupant(cell) === null;
+    const piece = wantsCell ? null : this.world.pickPiece(ndc);
     if (piece) {
       this.state = 'piece';
       this.piece = piece;
       this.canvas.style.cursor = 'grabbing';
       return;
     }
-    const cell = this.world.pickCell(ndc);
     if (this.world.selected && cell) {
       this.state = 'cell';
       this.cell = cell;
@@ -161,12 +164,13 @@ export class Input {
       this.canvas.style.cursor = '';
       return;
     }
-    if (this.world.pickPiece(ndc)) {
+    const cell = this.world.selected ? this.world.pickCell(ndc) : null;
+    const wantsCell = !!cell && this.world.occupant(cell) === null;
+    if (!wantsCell && this.world.pickPiece(ndc)) {
       this.canvas.style.cursor = 'grab';
       this.world.hover(null);
       return;
     }
-    const cell = this.world.selected ? this.world.pickCell(ndc) : null;
     this.world.hover(cell);
     this.canvas.style.cursor = cell ? 'pointer' : '';
   }

@@ -2,6 +2,7 @@ import '@fontsource/fredoka/500.css';
 import '@fontsource/fredoka/600.css';
 import '@fontsource/fredoka/700.css';
 import './style.css';
+import './modes.css';
 import { Sfx } from './audio';
 import { Game } from './game';
 import { COLORS, type ColorId, type Stimulus, type Value } from './game/rules';
@@ -24,7 +25,7 @@ async function boot(): Promise<void> {
   let game: Game | null = null;
   const world = new World(canvas, sfx, {
     resolve: (piece, cell) => game?.resolve(piece, cell) ?? { kind: 'noop' },
-    landed: (result) => game?.landed(result),
+    landed: (result, piece, cell) => game?.landed(result, piece, cell),
     onHold: (piece) => game?.onHold(piece),
   });
   game = new Game(ui, world, sfx);
@@ -42,8 +43,10 @@ async function boot(): Promise<void> {
   window.addEventListener('resize', layout);
   new ResizeObserver(layout).observe(ui.panel);
 
-  // Áudio só pode ligar num gesto do usuário.
+  // Áudio só pode ligar num gesto do usuário; a música entra no primeiro toque.
+  sfx.playMusic();
   window.addEventListener('pointerdown', () => sfx.unlock(), { capture: true });
+  window.addEventListener('keydown', () => sfx.unlock(), { capture: true });
 
   const loop = (now: number) => {
     world.frame(now);
@@ -66,6 +69,9 @@ async function boot(): Promise<void> {
           errors: g.session?.errors ?? null,
           finished: g.session?.finished ?? null,
           elapsedMs: g.session?.elapsedMs() ?? null,
+          run: g.run.kind,
+          score: g.score,
+          streak: g.session?.streak ?? null,
           stimulus: g.session?.stimulus ?? null,
           positions: g.session?.positions ?? null,
         }),

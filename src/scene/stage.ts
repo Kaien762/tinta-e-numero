@@ -92,7 +92,7 @@ export class Stage {
     const aspect = fw / fh;
     // Retrato: câmera mais alta (casas maiores). Paisagem: mais deitada.
     const k = MathUtils.clamp((aspect - 0.65) / (1.5 - 0.65), 0, 1);
-    const elev = MathUtils.degToRad(MathUtils.lerp(63, 49, k));
+    const elev = MathUtils.degToRad(MathUtils.lerp(66, 56, k));
     const center = this.bounds.getCenter(this.tmp);
     const tx = center.x, tz = center.z;
     cam.position.set(tx, Math.sin(elev) * DISTANCE, tz + Math.cos(elev) * DISTANCE);
