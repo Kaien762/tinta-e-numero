@@ -4,6 +4,11 @@ Jogo 3D de leitura e atenção (Vite + TypeScript + Three.js).
 O painel mostra um número por extenso; vale o **número da palavra** e a **cor das letras**.
 A cor do fundo é só distração.
 
+**Jogar:** https://kaien762.github.io/tinta-e-numero/
+
+Cada push na `main` roda os testes, gera o build e publica no GitHub Pages
+(`.github/workflows/pages.yml`).
+
 ## Rodar
 
 ```powershell
