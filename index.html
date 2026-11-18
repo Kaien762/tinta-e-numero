@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#eee4d4" />
+    <title>Tinta &amp; Número</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23f5c400'/%3E%3Ctext x='32' y='46' font-family='Arial' font-weight='900' font-size='38' text-anchor='middle' fill='%232fa860' stroke='%23241c36' stroke-width='4' paint-order='stroke'%3E2%3C/text%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Mesa com o tabuleiro de 16 casas e as quatro peças"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="hud is-off" id="hud">
+      <div class="hud-group">
+        <span class="chip chip-mode" id="hud-mode">Treino</span>
+        <span class="chip" id="hud-round">Rodada 1/10</span>
+      </div>
+      <span class="chip chip-timer" id="hud-timer" hidden>00:00,0</span>
+      <div class="hud-group">
+        <span class="chip chip-errors" id="hud-errors">Erros: 0</span>
+        <button class="icon-btn" id="btn-sound" type="button" aria-label="Desligar som" aria-pressed="true">
+          <svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h4l5-4v14l-5-4H4z" />
+            <path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+          </svg>
+          <svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h4l5-4v14l-5-4H4z" />
+            <path class="wave" d="M16 9l6 6M22 9l-6 6" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="panel is-off" id="panel" aria-label="Painel do estímulo">
+      <div class="plate" id="plate">
+        <svg class="word" id="word" viewBox="0 0 640 176" role="img" aria-label="">
+          <text class="w w-halo" x="320" y="136"></text>
+          <text class="w w-line" x="320" y="136"></text>
+          <text class="w w-fill" x="320" y="136"></text>
+        </svg>
+      </div>
+      <div class="coach" id="coach" aria-live="polite"></div>
+      <div class="toast" id="toast" role="status"></div>
+    </section>
+
+    <div class="countdown" id="countdown" aria-live="assertive"></div>
+
+    <div class="screen" id="screen-start">
+      <div class="card">
+        <svg class="logo" viewBox="0 0 600 236" role="img" aria-label="Tinta &amp; Número">
+          <g class="logo-halo">
+            <text x="300" y="104">Tinta &amp;</text>
+            <text x="300" y="212">Número</text>
+          </g>
+          <g class="logo-line">
+            <text x="300" y="104">Tinta &amp;</text>
+            <text x="300" y="212">Número</text>
+          </g>
+          <g class="logo-fill">
+            <text x="300" y="104"><tspan fill="#e5484d">T</tspan><tspan fill="#f5c400">i</tspan><tspan fill="#2fa860">n</tspan><tspan fill="#3b82f6">t</tspan><tspan fill="#e5484d">a</tspan> <tspan fill="#fffaf0">&amp;</tspan></text>
+            <text x="300" y="212"><tspan fill="#3b82f6">N</tspan><tspan fill="#2fa860">ú</tspan><tspan fill="#f5c400">m</tspan><tspan fill="#e5484d">e</tspan><tspan fill="#3b82f6">r</tspan><tspan fill="#2fa860">o</tspan></text>
+          </g>
+        </svg>
+        <ol class="how">
+          <li><span class="n">1</span><span>Leia o <b>número</b> escrito no painel.</span></li>
+          <li><span class="n">2</span><span>Repare na <b>cor das letras</b>, não na do fundo.</span></li>
+          <li><span class="n">3</span><span>Leve a <b>peça dessa cor</b> até a casa do número, na coluna dela.</span></li>
+        </ol>
+        <div class="legend" aria-hidden="true">
+          <span data-sym="vermelho"></span><span data-sym="amarelo"></span><span data-sym="verde"></span><span data-sym="azul"></span>
+        </div>
+        <button class="btn btn-primary" id="btn-start" type="button">Começar tutorial</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-mode" hidden>
+      <div class="card">
+        <p class="eyebrow" id="mode-eyebrow" hidden>Tutorial concluído ✓</p>
+        <h2>Escolha o modo</h2>
+        <div class="modes">
+          <button class="mode-card" id="btn-treino" type="button">
+            <span class="mode-ico grid4" aria-hidden="true">
+              <span data-sym="vermelho" data-size="22"></span><span data-sym="amarelo" data-size="22"></span><span data-sym="verde" data-size="22"></span><span data-sym="azul" data-size="22"></span>
+            </span>
+            <span class="mode-title">Treino</span>
+            <span class="mode-desc">10 rodadas, sem limite de tempo</span>
+          </button>
+          <button class="mode-card" id="btn-desafio" type="button">
+            <span class="mode-ico" aria-hidden="true">
+              <svg viewBox="0 0 48 48" width="46" height="46">
+                <circle cx="24" cy="27" r="15" fill="#fffaf0" stroke="#241c36" stroke-width="4" />
+                <rect x="19" y="4" width="10" height="6" rx="2" fill="#241c36" />
+                <path d="M24 27V18" stroke="#e5484d" stroke-width="4" stroke-linecap="round" />
+                <circle cx="24" cy="27" r="3" fill="#241c36" />
+              </svg>
+            </span>
+            <span class="mode-title">Desafio</span>
+            <span class="mode-desc">10 rodadas com cronômetro</span>
+          </button>
+        </div>
+        <button class="link-btn" id="btn-rever" type="button">Rever o tutorial</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-end" hidden>
+      <div class="card">
+        <p class="eyebrow" id="end-mode">Treino</p>
+        <h2>Partida concluída!</h2>
+        <div class="stats">
+          <div class="stat" id="stat-time"><span class="stat-label">Tempo total</span><span class="stat-value" id="end-time">00:00,0</span></div>
+          <div class="stat"><span class="stat-label">Tentativas incorretas</span><span class="stat-value" id="end-errors">0</span></div>
+          <div class="stat"><span class="stat-label">Rodadas</span><span class="stat-value" id="end-rounds">10/10</span></div>
+        </div>
+        <p class="end-msg" id="end-msg"></p>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-replay" type="button">Jogar novamente</button>
+          <button class="btn btn-ghost" id="btn-change" type="button">Trocar modo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="fatal" id="fatal" hidden></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
